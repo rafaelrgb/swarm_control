@@ -20,11 +20,12 @@ SwarmControllerNode::SwarmControllerNode(ros::NodeHandle *nh)
     position_.x = 0.0;
     position_.y = 0.0;
     r1_ = 0.0;
-    r2_ = 1.0;
-    r3_ = 0;
+    r2_ = 0.0;
+    r3_ = 0.0;
     r4_ = 1.0;
 
     // Add some neighbors
+    /*
     geometry_msgs::Point32 point;
     geometry_msgs::Point32 point2;
     geometry_msgs::Point32 point3;
@@ -36,12 +37,12 @@ SwarmControllerNode::SwarmControllerNode(ros::NodeHandle *nh)
     neighbors_.push_back(point2);
     point3.x = 8.0;
     point3.y = -1.0;
-    neighbors_.push_back(point3);
+    neighbors_.push_back(point3);*/
 
-    mavros_state_sub_ = nh->subscribe("/mavros/state", 1, &SwarmControllerNode::mavrosStateCb, this);
+    mavros_state_sub_ = nh->subscribe("mavros/state", 1, &SwarmControllerNode::mavrosStateCb, this);
     migration_point_sub_ = nh->subscribe("/migration_point", 1, &SwarmControllerNode::migrationPointCb, this);
-    odom_sub_ = nh->subscribe("/mavros/local_position/odom", 1, &SwarmControllerNode::odomCb, this);
-    rc_override_pub_ = nh->advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 10);
+    odom_sub_ = nh->subscribe("mavros/local_position/odom", 1, &SwarmControllerNode::odomCb, this);
+    rc_override_pub_ = nh->advertise<mavros_msgs::OverrideRCIn>("mavros/rc/override", 10);
 }
 
 SwarmControllerNode::~SwarmControllerNode()
@@ -71,6 +72,8 @@ void SwarmControllerNode::controlLoop()
     vRes.x = v1->x + v2->x + v3->x + v4->x;
     vRes.y = v1->y + v2->y + v3->y + v4->y;
     vRes.z = v1->z + v2->z + v3->z + v4->z;
+
+    ROS_INFO("vRes.x = %f | vRes.y = %f | vRes.z = %f\n", vRes.x, vRes.y, vRes.z);
 
     // Calculate Roll and Pitch depending on the mode
     if (mode_ == "LOITER"){
@@ -299,6 +302,8 @@ geometry_msgs::Point32* SwarmControllerNode::rule4()
     v4.x *= r4_;
     v4.y *= r4_;
     v4.z *= r4_;
+
+    ROS_INFO("v4.x = %f | v4.y = %f | v4.z = %f\n", v4.x, v4.y, v4.z);
 
     geometry_msgs::Point32 *v4Ptr = &v4;
 

@@ -1,5 +1,5 @@
 /**
- *  This source file implements the UavControllerNode class, which is also a
+ *  This source file implements the SwarmControllerNode class, which is also a
  *  Node class via enhancement.
  *
  *  Version: 1.0.0
@@ -9,23 +9,23 @@
  *  Maintainer: Rafael Gomes Braga (faerugb@gmail.com)
  */
 
-#include "UavControllerNode.h"
+#include "SwarmControllerNode.h"
 
 
-UavControllerNode::UavControllerNode(ros::NodeHandle *nh)
+SwarmControllerNode::SwarmControllerNode(ros::NodeHandle *nh)
   : Node(nh, 30)
 {
     migrationPoint_.x = 0.0;
     migrationPoint_.y = 0.0;
     position_.x = 0.0;
     position_.y = 0.0;
-    mavros_state_sub_ = nh->subscribe("/mavros/state", 1, &UavControllerNode::mavrosStateCb, this);
-    migration_point_sub_ = nh->subscribe("/migration_point", 1, &UavControllerNode::migrationPointCb, this);
-    odom_sub_ = nh->subscribe("/mavros/local_position/odom", 1, &UavControllerNode::odomCb, this);
+    mavros_state_sub_ = nh->subscribe("/mavros/state", 1, &SwarmControllerNode::mavrosStateCb, this);
+    migration_point_sub_ = nh->subscribe("/migration_point", 1, &SwarmControllerNode::migrationPointCb, this);
+    odom_sub_ = nh->subscribe("/mavros/local_position/odom", 1, &SwarmControllerNode::odomCb, this);
     rc_override_pub_ = nh->advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 10);
 }
 
-UavControllerNode::~UavControllerNode()
+SwarmControllerNode::~SwarmControllerNode()
 {
     mavros_state_sub_.shutdown();
     migration_point_sub_.shutdown();
@@ -33,7 +33,7 @@ UavControllerNode::~UavControllerNode()
     rc_override_pub_.shutdown();
 }
 
-void UavControllerNode::controlLoop()
+void SwarmControllerNode::controlLoop()
 {
     // Print information on screen
     char tab2[1024];
@@ -104,7 +104,7 @@ void UavControllerNode::controlLoop()
     publishRCOverride();
 }
 
-void UavControllerNode::publishRCOverride()
+void SwarmControllerNode::publishRCOverride()
 {
     // Create RC msg
     mavros_msgs::OverrideRCIn msg;
@@ -121,7 +121,7 @@ void UavControllerNode::publishRCOverride()
     rc_override_pub_.publish(msg);
 }
 
-void UavControllerNode::mavrosStateCb(const mavros_msgs::StateConstPtr &msg)
+void SwarmControllerNode::mavrosStateCb(const mavros_msgs::StateConstPtr &msg)
 {
     if(msg->mode == std::string("CMODE(0)"))
         return;
@@ -131,13 +131,13 @@ void UavControllerNode::mavrosStateCb(const mavros_msgs::StateConstPtr &msg)
     armed_ = msg->armed==128;
 }
 
-void UavControllerNode::migrationPointCb( const geometry_msgs::Point32ConstPtr &msg )
+void SwarmControllerNode::migrationPointCb( const geometry_msgs::Point32ConstPtr &msg )
 {
     migrationPoint_.x = msg->x;
     migrationPoint_.y = msg->y;
 }
 
-void UavControllerNode::odomCb( const nav_msgs::OdometryConstPtr &msg )
+void SwarmControllerNode::odomCb( const nav_msgs::OdometryConstPtr &msg )
 {
     position_.x = msg->pose.pose.position.x;
     position_.y = msg->pose.pose.position.y;

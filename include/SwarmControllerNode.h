@@ -1,5 +1,5 @@
 /**
- *  This header file defines the UavControllerNode class, which is also a
+ *  This header file defines the SwarmControllerNode class, which is also a
  *  Node class via enhancement.
  *
  *  Version: 1.0.0
@@ -9,8 +9,8 @@
  *  Maintainer: Rafael Gomes Braga (faerugb@gmail.com)
  */
 
-#ifndef _UAV_CONTROLLER_NODE_H_
-#define _UAV_CONTROLLER_NODE_H_
+#ifndef _SWARM_CONTROLLER_NODE_H_
+#define _SWARM_CONTROLLER_NODE_H_
 
 #include <string>
 #include "Node.h"
@@ -25,11 +25,11 @@
 #define BASERC  1500
 #define MAXRC   1900
 
-class UavControllerNode : public Node
+class SwarmControllerNode : public Node
 {
 public:
-  UavControllerNode(ros::NodeHandle *nh);
-  virtual ~UavControllerNode();
+  SwarmControllerNode(ros::NodeHandle *nh);
+  virtual ~SwarmControllerNode();
 
 private:
   virtual void controlLoop();
@@ -39,6 +39,7 @@ private:
   geometry_msgs::Point32 migrationPoint_;
   geometry_msgs::Point32 lastMP_;
   double lastMPVelX_, lastMPVelY_;
+  std::vector<geometry_msgs::Point32> neighbors_;
 
   // Drone commands
   double roll_;
@@ -64,4 +65,4 @@ private:
 
 };
 
-#endif // _UAV_CONTROLLER_NODE_H_
+#endif // _SWARM_CONTROLLER_NODE_H_

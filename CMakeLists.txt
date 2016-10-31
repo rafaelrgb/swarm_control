@@ -21,18 +21,20 @@ include_directories(
 
 set(H_FILES
     include/Node.h
-    include/SwarmControllerNode.h
+    include/UavControllerNode.h
+    #include/SwarmControllerNode.h
 )
 
 set(CPP_FILES
     src/Node.cpp
-    src/SwarmControllerNode.cpp
+    src/UavControllerNode.cpp
+    #src/SwarmControllerNode.cpp
 )
 
-add_executable(uav_control_node src/uav_control_node.cpp ${CPP_FILES})
-add_dependencies(uav_control_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(uav_control_node ${catkin_LIBRARIES})
+add_executable(uav_controller_node src/uav_controller_node.cpp ${CPP_FILES})
+add_dependencies(uav_controller_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(uav_controller_node ${catkin_LIBRARIES})
 
-add_executable(swarm_controller_node src/swarm_controller_node.cpp ${CPP_FILES})
-add_dependencies(swarm_controller_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(swarm_controller_node ${catkin_LIBRARIES})
+#add_executable(swarm_controller_node src/swarm_controller_node.cpp ${CPP_FILES})
+#add_dependencies(swarm_controller_node ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(swarm_controller_node ${catkin_LIBRARIES})

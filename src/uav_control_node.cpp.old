@@ -158,6 +158,6 @@ int main(int argc, char **argv)
     mavros_state_sub = nh.subscribe("/mavros/state", 1, mavrosStateCb);
     odom_sub = nh.subscribe("/mavros/local_position/odom", 1, odomCb);
     objective_sub = nh.subscribe("/objective", 1, objectiveCb);
-    pub = nh.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 10);;
+    pub = nh.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 10);
     ros::spin();
 }

@@ -19,6 +19,25 @@ SwarmControllerNode::SwarmControllerNode(ros::NodeHandle *nh)
     migrationPoint_.y = 0.0;
     position_.x = 0.0;
     position_.y = 0.0;
+    r1_ = 0.0;
+    r2_ = 1.0;
+    r3_ = 0;
+    r4_ = 1.0;
+
+    // Add some neighbors
+    geometry_msgs::Point32 point;
+    geometry_msgs::Point32 point2;
+    geometry_msgs::Point32 point3;
+    point.x = 0.0;
+    point.y = 0.0;
+    neighbors_.push_back(point);
+    point2.x = -6.0;
+    point2.y = 6.0;
+    neighbors_.push_back(point2);
+    point3.x = 8.0;
+    point3.y = -1.0;
+    neighbors_.push_back(point3);
+
     mavros_state_sub_ = nh->subscribe("/mavros/state", 1, &SwarmControllerNode::mavrosStateCb, this);
     migration_point_sub_ = nh->subscribe("/migration_point", 1, &SwarmControllerNode::migrationPointCb, this);
     odom_sub_ = nh->subscribe("/mavros/local_position/odom", 1, &SwarmControllerNode::odomCb, this);
@@ -41,43 +60,22 @@ void SwarmControllerNode::controlLoop()
     tab2[sizeof(tab2) - 1] = 0;
     ROS_INFO("Objective = (%f , %f) \n Roll = %f | Pitch = %f\n Mode = %s \n UavX = %f | UavY = %f\n", migrationPoint_.x, migrationPoint_.y, roll_, pitch_, tab2, position_.x, position_.y);
 
-    // Time since last call
-    double timeBetweenMarkers = (ros::Time::now() - lastTime_).toSec();
-    lastTime_ = ros::Time::now();
+    // Calculate each rule's influence
+    geometry_msgs::Point32 *v1 = rule1();
+    geometry_msgs::Point32 *v2 = rule2();
+    geometry_msgs::Point32 *v3 = rule3();
+    geometry_msgs::Point32 *v4 = rule4();
 
-    // Error between pose and objective
-    float ErX = 0.0;
-    float ErY = 0.0;
-
-    // Get the uav position
-    lastMP_.x = migrationPoint_.x;
-    lastMP_.y = migrationPoint_.y;
-
-    // Get objective center and calculate error
-    ErX = position_.x - migrationPoint_.x;
-    ErY = position_.y - migrationPoint_.y;
-
-    // Calculate velocity
-    lastMPVelX_ = (lastMP_.x - migrationPoint_.x)/timeBetweenMarkers;
-    lastMPVelY_ = (lastMP_.y - migrationPoint_.y)/timeBetweenMarkers;
-
-    /*
-    if (timeBetweenMarkers < 1.0){
-        lastObjectiveVelX = (lastObjectiveX - objectiveX)/timeBetweenMarkers;
-        lastObjectiveVelY = (lastObjectiveY - objectiveY)/timeBetweenMarkers;
-    } else{
-        lastObjectiveVelX = 0.0;
-        lastObjectiveVelY = 0.0;
-    }
-    */
+    // Combine the rules
+    geometry_msgs::Point32 vRes;
+    vRes.x = v1->x + v2->x + v3->x + v4->x;
+    vRes.y = v1->y + v2->y + v3->y + v4->y;
+    vRes.z = v1->z + v2->z + v3->z + v4->z;
 
     // Calculate Roll and Pitch depending on the mode
     if (mode_ == "LOITER"){
-        roll_ = BASERC + ErX * FACTOR;
-        pitch_ = BASERC - ErY * FACTOR;
-    }else if (mode_ == "ALT_HOLD"){
-        roll_ = BASERC - (0.5*ErX+0.1*lastMPVelX_);
-        pitch_ = BASERC - (0.5*ErY+0.1*lastMPVelY_);
+        roll_ = BASERC - vRes.x * FACTOR;
+        pitch_ = BASERC + vRes.y * FACTOR;
     }else{
         roll_ = BASERC;
         pitch_ = BASERC;
@@ -141,4 +139,168 @@ void SwarmControllerNode::odomCb( const nav_msgs::OdometryConstPtr &msg )
 {
     position_.x = msg->pose.pose.position.x;
     position_.y = msg->pose.pose.position.y;
+}
+
+
+// REYNOLDS RULES
+
+// Rule 1: Flocking
+geometry_msgs::Point32* SwarmControllerNode::rule1()
+{
+    geometry_msgs::Point32 v1;
+
+    v1.x = 0.0;
+    v1.y = 0.0;
+    v1.z = 0.0;
+
+    int n = neighbors_.size();
+
+    if ( n > 0 )
+    {
+        geometry_msgs::Point32 centerOfMass;
+
+        centerOfMass.x = 0.0;
+        centerOfMass.y = 0.0;
+        centerOfMass.z = 0.0;
+
+        for ( int i(0); i < n; i++ )
+        {
+            centerOfMass.x += neighbors_[i].x;
+            centerOfMass.y += neighbors_[i].y;
+            centerOfMass.z += neighbors_[i].z;
+        }
+
+        centerOfMass.x *= ( 1 / n );
+        centerOfMass.y *= ( 1 / n );
+        centerOfMass.z *= ( 1 / n );
+
+        v1.x = centerOfMass.x - position_.x;
+        v1.y = centerOfMass.y - position_.y;
+        v1.z = centerOfMass.z - position_.z;
+    }
+
+    v1.x *= r1_;
+    v1.y *= r1_;
+    v1.z *= r1_;
+
+    geometry_msgs::Point32 *v1Ptr = &v1;
+
+    return v1Ptr;
+}
+
+
+// Rule 2: Collision Avoidance
+geometry_msgs::Point32* SwarmControllerNode::rule2()
+{
+    geometry_msgs::Point32 v2;
+
+    v2.x = 0.0;
+    v2.y = 0.0;
+    v2.z = 0.0;
+
+    int n = neighbors_.size();
+
+    if ( n > 0 )
+    {
+        for ( int i(0); i < n; i++ )
+        {
+            double d = sqrt( pow( (neighbors_[i].x - position_.x), 2 ) +
+                             pow( (neighbors_[i].y - position_.y), 2 ) +
+                             pow( (neighbors_[i].z - position_.z), 2 ) );
+
+            if ( d < VISION_DISTANCE )
+            {
+                double dif = VISION_DISTANCE - d;
+
+                geometry_msgs::Point32 v;
+
+                v.x = neighbors_[i].x - position_.x;
+                v.y = neighbors_[i].y - position_.y;
+                v.z = neighbors_[i].z - position_.z;
+
+                double vm = sqrt( pow( (v.x), 2 ) + pow( (v.y), 2 ) + pow( (v.z), 2 ) );
+
+                v.x /= vm;
+                v.y /= vm;
+                v.z /= vm;
+
+                v.x *= dif;
+                v.y *= dif;
+                v.z *= dif;
+
+                v2.x -= v.x;
+                v2.y -= v.y;
+                v2.z -= v.z;
+            }
+        }
+    }
+
+    v2.x *= r2_;
+    v2.y *= r2_;
+    v2.z *= r2_;
+
+    geometry_msgs::Point32 *v2Ptr = &v2;
+
+    return v2Ptr;
+}
+
+// Rule 3: Velocity Matching
+geometry_msgs::Point32* SwarmControllerNode::rule3()
+{
+    geometry_msgs::Point32 v3;
+
+    v3.x = 0.0;
+    v3.y = 0.0;
+    v3.z = 0.0;
+
+    int n = neighbors_.size();
+
+    if ( n > 0 )
+    {
+        for ( int i(0); i < n; i++ )
+        {
+            v3.x += neighbors_[i].x;
+            v3.y += neighbors_[i].y;
+            v3.z += neighbors_[i].z;
+        }
+
+        v3.x *= ( 1 / n );
+        v3.y *= ( 1 / n );
+        v3.z *= ( 1 / n );
+
+        v3.x = v3.x - position_.x;
+        v3.y = v3.y - position_.y;
+        v3.z = v3.z - position_.z;
+    }
+
+    v3.x *= r3_;
+    v3.y *= r3_;
+    v3.z *= r3_;
+
+    geometry_msgs::Point32 *v3Ptr = &v3;
+
+    return v3Ptr;
+}
+
+
+// Rule 4: Migration
+geometry_msgs::Point32* SwarmControllerNode::rule4()
+{
+    geometry_msgs::Point32 v4;
+
+    v4.x = 0.0;
+    v4.y = 0.0;
+    v4.z = 0.0;
+
+    v4.x = migrationPoint_.x - position_.x;
+    v4.y = migrationPoint_.y - position_.y;
+    v4.z = migrationPoint_.z - position_.z;
+
+    v4.x *= r4_;
+    v4.y *= r4_;
+    v4.z *= r4_;
+
+    geometry_msgs::Point32 *v4Ptr = &v4;
+
+    return v4Ptr;
 }

@@ -13,6 +13,7 @@
 #define _SWARM_CONTROLLER_NODE_H_
 
 #include <string>
+#include <math.h>
 #include "Node.h"
 #include <mavros_msgs/OverrideRCIn.h>
 #include <mavros_msgs/State.h>
@@ -25,6 +26,8 @@
 #define BASERC  1500
 #define MAXRC   1900
 
+#define VISION_DISTANCE 3000.0
+
 class SwarmControllerNode : public Node
 {
 public:
@@ -34,11 +37,15 @@ public:
 private:
   virtual void controlLoop();
 
+  // Rules weights
+  double r1_;
+  double r2_;
+  double r3_;
+  double r4_;
+
   // Position of elements in the system
   geometry_msgs::Point32 position_;
   geometry_msgs::Point32 migrationPoint_;
-  geometry_msgs::Point32 lastMP_;
-  double lastMPVelX_, lastMPVelY_;
   std::vector<geometry_msgs::Point32> neighbors_;
 
   // Drone commands
@@ -55,13 +62,18 @@ private:
   ros::Subscriber migration_point_sub_; // Subscriber to migration point
   ros::Subscriber odom_sub_;            // Subscriber to odometry
   ros::Publisher rc_override_pub_;      // RC publisher
-  ros::Time lastTime_;                  // Timer
 
   // Member functions
   void mavrosStateCb( const mavros_msgs::StateConstPtr &msg );
   void migrationPointCb( const geometry_msgs::Point32ConstPtr &msg );
   void odomCb( const nav_msgs::OdometryConstPtr &msg );
   void publishRCOverride();
+
+  // Rules
+  geometry_msgs::Point32* rule1();
+  geometry_msgs::Point32* rule2();
+  geometry_msgs::Point32* rule3();
+  geometry_msgs::Point32* rule4();
 
 };
 

@@ -4,14 +4,23 @@ project(swarm_control)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   mavros
+  std_msgs
   mav_msgs
   nav_msgs
   geometry_msgs
+  message_generation
  )
+
+add_message_files(
+    DIRECTORY msg
+    FILES UavPosition.msg
+)
+
+generate_messages(DEPENDENCIES geometry_msgs)
  
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS roscpp mavros mav_msgs nav_msgs geometry_msgs
+    CATKIN_DEPENDS roscpp mavros std_msgs mav_msgs nav_msgs geometry_msgs message_runtime
 )
 
 include_directories(

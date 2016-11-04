@@ -17,7 +17,9 @@
 			<rosparam command="load" file="$(arg config_yaml)" />
 		</node>
 
-                <node pkg="swarm_control" type="swarm_controller_node" name="swarm_controller_node" output="screen" />
+                <node pkg="swarm_control" type="swarm_controller_node" name="swarm_controller_node" output="screen">
+                    <param name="uav_id" value="0" />
+                </node>
 	</group>
 	
 	<group ns="uav1">
@@ -31,6 +33,10 @@
 			<rosparam command="load" file="$(arg pluginlists_yaml)" />
 			<rosparam command="load" file="$(arg config_yaml)" />
 		</node>
+
+                <node pkg="swarm_control" type="swarm_controller_node" name="swarm_controller_node" output="screen">
+                    <param name="uav_id" value="1" />
+                </node>
 	</group>
 	
 	<group ns="uav2">
@@ -44,6 +50,10 @@
 			<rosparam command="load" file="$(arg pluginlists_yaml)" />
 			<rosparam command="load" file="$(arg config_yaml)" />
 		</node>
+
+                <node pkg="swarm_control" type="swarm_controller_node" name="swarm_controller_node" output="screen">
+                    <param name="uav_id" value="2" />
+                </node>
 	</group>
 
 </launch>

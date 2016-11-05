@@ -22,17 +22,12 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Bool.h>
 #include <swarm_control/UavPosition.h>
-
-#define FACTOR  60.0
-
-#define MINRC   1100
-#define BASERC  1500
-#define MAXRC   1900
+#include <swarm_control/UavPositionArray.h>
 
 #define MAXVEL   5.0
 #define MINVEL   -5.0
 
-#define VISION_DISTANCE 3000.0
+#define VISION_DISTANCE 100.0
 
 class SwarmControllerNode : public Node
 {
@@ -58,11 +53,7 @@ private:
   // Position of elements in the system
   geometry_msgs::Point32 position_;
   geometry_msgs::Point32 migrationPoint_;
-  std::vector<swarm_control::UavPosition> neighbors_;
-
-  // Drone commands
-  double roll_;
-  double pitch_;
+  swarm_control::UavPositionArray neighbors_;
 
   // Flight mode
   std::string mode_;
@@ -74,20 +65,16 @@ private:
   ros::Subscriber migration_point_sub_; // Subscriber to migration point
   ros::Subscriber odom_sub_;            // Subscriber to odometry
   ros::Subscriber enable_control_sub_;  // Subscriber to enable or disable control
-  ros::Subscriber uav_position_sub_;    // Subscriber all uav positions
-  ros::Publisher rc_override_pub_;      // RC publisher
+  ros::Subscriber uav_positions_sub_;    // Subscriber all uav positions
   ros::Publisher cmd_vel_pub_;          // Velocity publisher
-  ros::Publisher position_pub_;         // Position publisher
 
   // Member functions
   void mavrosStateCb( const mavros_msgs::StateConstPtr &msg );
   void migrationPointCb( const geometry_msgs::Point32ConstPtr &msg );
   void odomCb( const nav_msgs::OdometryConstPtr &msg );
   void enableControlCb( const std_msgs::BoolConstPtr &msg );
-  void uavPositionCb( const swarm_control::UavPositionConstPtr &msg );
-  void publishRCOverride();
+  void uavPositionsCb( const swarm_control::UavPositionArrayConstPtr &msg );
   void publishVelocity( double velX, double velY );
-  void publishPosition();
 
   // Rules
   geometry_msgs::Point32* rule1();

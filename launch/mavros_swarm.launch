@@ -56,4 +56,5 @@
                 </node>
 	</group>
 
+        <node pkg="swarm_control" type="conversor_node" name="conversor_node" output="screen" />
 </launch>

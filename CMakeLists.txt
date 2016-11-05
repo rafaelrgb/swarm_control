@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
     DIRECTORY msg
-    FILES UavPosition.msg
+    FILES UavPosition.msg UavPositionArray.msg
 )
 
 generate_messages(DEPENDENCIES geometry_msgs)
@@ -32,12 +32,14 @@ set(H_FILES
     include/Node.h
     include/UavControllerNode.h
     include/SwarmControllerNode.h
+    include/ConversorNode.h
 )
 
 set(CPP_FILES
     src/Node.cpp
     src/UavControllerNode.cpp
     src/SwarmControllerNode.cpp
+    src/ConversorNode.cpp
 )
 
 add_executable(uav_controller_node src/uav_controller_node.cpp ${CPP_FILES})
@@ -47,3 +49,7 @@ target_link_libraries(uav_controller_node ${catkin_LIBRARIES})
 add_executable(swarm_controller_node src/swarm_controller_node.cpp ${CPP_FILES})
 add_dependencies(swarm_controller_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(swarm_controller_node ${catkin_LIBRARIES})
+
+add_executable(conversor_node src/conversor_node.cpp ${CPP_FILES})
+add_dependencies(conversor_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(conversor_node ${catkin_LIBRARIES})

@@ -1,0 +1,71 @@
+<launch>
+    <!-- vim: set ft=xml noet : -->
+    <!-- base node launch file-->
+
+    <arg name="pluginlists_yaml" default="$(find mavros)/launch/apm_pluginlists.yaml" />
+    <arg name="config_yaml" default="$(find mavros)/launch/apm_config.yaml" />
+
+    <arg name="origin_lat" default="-22.413949" />
+    <arg name="origin_lon" default="-45.446555" />
+
+    <group ns="uav0">
+            <node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
+                    <param name="fcu_url" value="udp://127.0.0.1:14551@" />
+                    <param name="gcs_url" value="" />
+                    <param name="target_system_id" value="1" />
+                    <param name="target_component_id" value="1" />
+
+                    <!-- load blacklist, config -->
+                    <rosparam command="load" file="$(arg pluginlists_yaml)" />
+                    <rosparam command="load" file="$(arg config_yaml)" />
+            </node>
+
+            <node pkg="swarm_control" type="swarm_controller_node" name="swarm_controller_node" output="screen">
+                <param name="uav_id" value="0" />
+                <param name="origin_lat" value="$(arg origin_lat)" />
+                <param name="origin_lon" value="$(arg origin_lon)" />
+            </node>
+    </group>
+
+    <group ns="uav1">
+            <node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
+                    <param name="fcu_url" value="udp://127.0.0.1:14561@" />
+                    <param name="gcs_url" value="" />
+                    <param name="target_system_id" value="1" />
+                    <param name="target_component_id" value="1" />
+
+                    <!-- load blacklist, config -->
+                    <rosparam command="load" file="$(arg pluginlists_yaml)" />
+                    <rosparam command="load" file="$(arg config_yaml)" />
+            </node>
+
+            <node pkg="swarm_control" type="swarm_controller_node" name="swarm_controller_node" output="screen">
+                <param name="uav_id" value="1" />
+                <param name="origin_lat" value="$(arg origin_lat)" />
+                <param name="origin_lon" value="$(arg origin_lon)" />
+            </node>
+    </group>
+
+    <group ns="uav2">
+            <node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
+                    <param name="fcu_url" value="udp://127.0.0.1:14571@" />
+                    <param name="gcs_url" value="" />
+                    <param name="target_system_id" value="1" />
+                    <param name="target_component_id" value="1" />
+
+                    <!-- load blacklist, config -->
+                    <rosparam command="load" file="$(arg pluginlists_yaml)" />
+                    <rosparam command="load" file="$(arg config_yaml)" />
+            </node>
+
+            <node pkg="swarm_control" type="swarm_controller_node" name="swarm_controller_node" output="screen">
+                <param name="uav_id" value="2" />
+                <param name="origin_lat" value="$(arg origin_lat)" />
+                <param name="origin_lon" value="$(arg origin_lon)" />
+            </node>
+    </group>
+
+    <node pkg="swarm_control" type="conversor_node" name="conversor_node" output="screen" />
+
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+</launch>

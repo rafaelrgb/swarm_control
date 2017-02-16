@@ -38,9 +38,9 @@ private:
   ros::Publisher uav_positions_pub_;
 
   // Member functions
-  void uav0PositionCb( const nav_msgs::OdometryConstPtr &msg );
-  void uav1PositionCb( const nav_msgs::OdometryConstPtr &msg );
-  void uav2PositionCb( const nav_msgs::OdometryConstPtr &msg );
+  void uav0PositionCb( const swarm_control::UavPosition &msg );
+  void uav1PositionCb( const swarm_control::UavPosition &msg );
+  void uav2PositionCb( const swarm_control::UavPosition &msg );
   void publishUavPositions();
 
 };

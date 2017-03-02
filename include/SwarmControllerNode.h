@@ -13,24 +13,24 @@
 #define _SWARM_CONTROLLER_NODE_H_
 
 #include <string>
-#include <math.h>
+
 #include "Node.h"
 #include <mavros_msgs/OverrideRCIn.h>
 #include <mavros_msgs/State.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/NavSatFix.h>
-#include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Bool.h>
-#include <swarm_control/UavPosition.h>
-#include <swarm_control/UavPositionArray.h>
+#include <swarm_control/OdometryWithUavId.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 
 #define PI 3.14159265
 
 #define MAXVEL   5.0
-#define MINVEL   -5.0
 
-#define VISION_DISTANCE 3.0
+#define VISION_DISTANCE 100.0
 
 class SwarmControllerNode : public Node
 {
@@ -59,10 +59,9 @@ private:
   double r4_;
 
   // Position of elements in the system
-  geometry_msgs::Point32 position_;
-  geometry_msgs::Point32 vRes_;
-  geometry_msgs::Point32 migrationPoint_;
-  swarm_control::UavPositionArray neighbors_;
+  nav_msgs::Odometry odom_;
+  geometry_msgs::Point migrationPoint_;
+  std::vector<swarm_control::OdometryWithUavId> neighbors_;
 
   // Flight mode
   std::string mode_;
@@ -75,9 +74,10 @@ private:
   ros::Subscriber global_position_sub_; // Subscriber to global position
   ros::Subscriber odom_sub_;            // Subscriber to odometry
   ros::Subscriber enable_control_sub_;  // Subscriber to enable or disable control
-  ros::Subscriber uav_positions_sub_;   // Subscriber all uav positions
-  ros::Publisher uav_position_pub_;     // UAV pose publisher
+  ros::Subscriber uavs_odom_sub_;       // Subscriber to all UAVs odometry
+  ros::Publisher uav_odom_pub_;         // UAV odom publisher
   ros::Publisher cmd_vel_pub_;          // Velocity publisher
+  tf::TransformBroadcaster pose_br_;
 
   ros::Publisher v1_pub_;
   ros::Publisher v2_pub_;
@@ -87,19 +87,19 @@ private:
 
   // Member functions
   void mavrosStateCb( const mavros_msgs::StateConstPtr &msg );
-  void migrationPointCb( const geometry_msgs::Point32ConstPtr &msg );
+  void migrationPointCb( const geometry_msgs::PointConstPtr &msg );
   void globalPositionCb( const sensor_msgs::NavSatFix &msg );
   void odomCb( const nav_msgs::OdometryConstPtr &msg );
   void enableControlCb( const std_msgs::BoolConstPtr &msg );
-  void uavPositionsCb( const swarm_control::UavPositionArrayConstPtr &msg );
-  void publishPose ( int id, double x, double y, double z, double vX, double vY, double vZ );
+  void uavsOdomCb( const swarm_control::OdometryWithUavIdConstPtr &msg );
+  void publishUavOdom ();
   void publishVelocity( double velX, double velY );
 
   // Rules
-  geometry_msgs::Point32 rule1();
-  geometry_msgs::Point32 rule2();
-  geometry_msgs::Point32 rule3();
-  geometry_msgs::Point32 rule4();
+  geometry_msgs::Point rule1();
+  geometry_msgs::Point rule2();
+  geometry_msgs::Point rule3();
+  geometry_msgs::Point rule4();
 
 
   // Utility functions
